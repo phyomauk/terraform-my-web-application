@@ -895,7 +895,26 @@ lifecycle {
 ### 1. Deploy Boostrap Resources
 ```text
 cd /terraform_project/bootstrap
+touch terraform.tfvars
+```
+insert the input values in the terraform.tfvars file. Refer to the following example:
+```text
+project_name          = "phyo-web-application"
+hosted_zone_id        = "Z05394043K4G3LXTX1111"
+domain_name           = "yourdomain.com"
+email_address         = "yourname@gmail.com"
+site_full_domain_name = "*.yourdomain.com"
+aws_region            = "us-west-2"
+repo_owner            = "yourname"
+app_repo_name         = "app-my-web-application"
+repo_name             = "terraform-my-web-application"
+codeconnections_arn   = "arn:aws:codeconnections:us-west-1:774305601234:connection/5fd2ca39-3397-4cc2-bbe7-6c53deee1234"
+state_bucket_name     = "yourname-terraform-state-file-bucket-us-west-2"
+state_bucket_key      = "web-application/bootstrap/terraform.tfstate"
+```
 
+run terraform
+```text
 terraform init
 terraform apply
 ```
