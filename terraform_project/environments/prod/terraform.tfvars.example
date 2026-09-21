@@ -1,0 +1,12 @@
+project_name          = 
+hosted_zone_id        = 
+domain_name           = 
+email_address         = 
+site_full_domain_name = 
+aws_region            = 
+repo_owner            = 
+app_repo_name         = 
+repo_name             =
+codeconnections_arn   =
+state_bucket_name     = 
+state_bucket_key      =  

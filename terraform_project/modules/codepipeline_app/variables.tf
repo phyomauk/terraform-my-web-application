@@ -1,0 +1,10 @@
+variable "artifacts_bucket_name" {}
+variable "repo_owner" {}
+variable "app_repo_name" {}
+variable "branch" {}
+variable "codeconnections_arn" {}
+variable "codebuild_project_name" {}
+variable "codepipeline_role_arn" {}
+variable "project_name" {}
+variable "codedeploy_application_name" {}
+variable "deployment_group_name" {}
