@@ -1,3 +1,5 @@
+# This module will be called during the bootstrap phase
+
 resource "aws_ssm_parameter" "project_name" {
   name  = "/global/prod/project_name"
   type  = "String"

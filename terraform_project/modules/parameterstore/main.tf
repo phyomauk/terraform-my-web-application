@@ -1,3 +1,5 @@
+# this moudule will be called during infrastructure provisioning 
+
 resource "random_password" "docdb" {
   length  = 16
   special = false

@@ -26,12 +26,12 @@ variable "aws_region" {
 }
 
 variable "repo_owner" {
-  description = "repository owner name"
+  description = "GitHub repository owner name"
   default     = "phyomauk"
 }
 
 variable "app_repo_name" {
-  description = "application code repository name"
+  description = "application code GitHub repository name"
   default     = "app-my-web-application"
 }
 
@@ -40,7 +40,7 @@ variable "codeconnections_arn" {
 }
 
 variable "repo_name" {
-  description = "terraform code repo name"
+  description = "terraform project code repo name"
 }
 
 variable "state_bucket_name" {
