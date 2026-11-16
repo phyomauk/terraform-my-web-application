@@ -187,10 +187,12 @@ InfraPipeline --> CodeDeploy
 AppPipeline --> ECRFrontend
 AppPipeline --> ECRBackend
 
-ECRFrontend --> ECS
-ECRBackend --> ECS
+ECRFrontend --> CodeDeploy
+ECRBackend --> CodeDeploy
 
 CodeDeploy --> ECS
+
+ECS --> NAT
 
 ALB --> ECS
 ECS --> DocDB
