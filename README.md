@@ -7,8 +7,8 @@
 - business-problems-solved
 - solution-highlights
 - project-evolution
-- aws-architecture-diagram--overview
-- architecture-overview
+- aws-3-Tier-application-architecture
+- terraform-provisioning-&-deployment-architecture
 - repository-structure
 - infrastructure-design
 - cicd-architecture
@@ -223,7 +223,7 @@ The platform evolved from a simple ECS deployment solution into a production-sty
 
 ```mermaid
    flowchart TB
-      LM["Local Machine"]
+      LM["Local Machine<br/> Run bootstrap stage"]
       GHInfra["GitHub Infra"]
       GHApp["GitHub App"]
 
