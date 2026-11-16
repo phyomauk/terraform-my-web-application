@@ -146,50 +146,76 @@ The platform evolved from a simple ECS deployment solution into a production-sty
 
 ## 📐 AWS 3-Tier Application Architecture
 ```mermaid
-graph TB
 
-   User
-   subgraph AWSCloud
-         Route53
-         WAF[AWS WAF]
-         CloudWatch["CloudWatch"]
-         SNS["SNS"]   
-         FrontEndECR
-         BackEndECR
-      
-         subgraph VPC
-            subgraph PublicSubnets-Multi-AZs
-               ALB["Application Load Balancer"]
-               NAT["NAT Gateway"]
+   flowchart TB
+    User["Internet Users"]
+
+    subgraph AWS["AWS Cloud"]
+        direction TB
+
+        Route53["Amazon Route 53"]
+        WAF["AWS WAF"]
+
+        subgraph VPC["Amazon VPC"]
+            direction TB
+
+            subgraph Public["Public Subnets - Multi AZ"]
+                ALB["Application Load Balancer"]
+                NAT["NAT Gateway"]
             end
 
-            subgraph PrivateSubnets-Multi-AZs
-               A(( ))
-               ECS["ECS Fargate"]
+            subgraph Private["Private Application Subnets - Multi AZ"]
+                FE["Frontend ECS Fargate Service"]
+                BE["Backend ECS Fargate Service"]
             end
 
-            subgraph DbPrivateSubnets-Multi-AZs
-               B(( ))
-               DocDB["Amazon DocumentDB"]
+            subgraph Database["Private Database Subnets - Multi AZ"]
+                DocDB[("Amazon DocumentDB Cluster")]
             end
 
-         end
-         WAF --> ALB
-         ALB --> ECS
-         A --> B
+        end
 
-         FrontEndECR --> ECS
-         BackEndECR --> ECS
+        subgraph ECR["Amazon ECR"]
+            FrontECR["Frontend Repository"]
+            BackECR["Backend Repository"]
+        end
 
+        subgraph Monitoring["Monitoring and Notifications"]
+            CW["Amazon CloudWatch"]
+            SNS["Amazon SNS"]
+        end
+    end
 
-         ECS --> NAT
-         ECS --> CloudWatch
-         ALB --> CloudWatch
-         CloudWatch --> SNS
-   end      
-   User --> Route53
-   Route53 --> User
-   User --> WAF
+    User -. "DNS Query" .-> Route53
+    Route53 -. "DNS Resolution" .-> User
+
+    User --> ALB
+    WAF -. "Web ACL" .-> ALB
+
+    ALB --> FE
+    FE --> BE
+    BE --> DocDB
+
+    FrontECR -. "Container Image" .-> FE
+    BackECR -. "Container Image" .-> BE
+
+    FE -. "Outbound Traffic" .-> NAT
+    BE -. "Outbound Traffic" .-> NAT
+
+    FE -. "Logs and Metrics" .-> CW
+    BE -. "Logs and Metrics" .-> CW
+    ALB -. "Metrics" .-> CW
+    CW -. "Alarm Notification" .-> SNS
+
+    classDef networking fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
+    classDef compute fill:#fff3e0,stroke:#ef6c00,color:#9a3412
+    classDef database fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+    classDef security fill:#fce8e6,stroke:#c62828,color:#b71c1c
+
+    class ALB,NAT,Route53 networking
+    class FE,BE,FrontECR,BackECR compute
+    class DocDB database
+    class WAF security
 ```
 ---
 
