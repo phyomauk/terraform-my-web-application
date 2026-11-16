@@ -144,72 +144,140 @@ The platform evolved from a simple ECS deployment solution into a production-sty
 
 ---
 
-## 📐 AWS Architecture Diagram & Overview
+## 📐 AWS 3-Tier Application Architecture
 ```mermaid
 graph TB
 
-GitHubInfra["GitHub Infrastructure Repo"]
-GitHubApp["GitHub Application Repo"]
+   User
+   subgraph AWSCloud
+         Route53
+         WAF[AWS WAF]
+         CloudWatch["CloudWatch"]
+         SNS["SNS"]   
+         FrontEndECR
+         BackEndECR
+      
+         subgraph VPC
+            subgraph PublicSubnets-Multi-AZs
+               ALB["Application Load Balancer"]
+               NAT["NAT Gateway"]
+            end
 
-subgraph Bootstrap
-    ArtifactBucket["Artifacts S3 Bucket"]
-    ECRFrontend["Frontend ECR"]
-    ECRBackend["Backend ECR"]
-    InfraPipeline["Infrastructure Pipeline"]
-end
+            subgraph PrivateSubnets-Multi-AZs
+               A(( ))
+               ECS["ECS Fargate"]
+            end
 
-subgraph VPC
-    subgraph PublicSubnets
-        ALB["Application Load Balancer"]
-        NAT["NAT Gateway"]
-    end
+            subgraph DbPrivateSubnets-Multi-AZs
+               B(( ))
+               DocDB["Amazon DocumentDB"]
+            end
 
-    subgraph PrivateSubnets
-        ECS["ECS Fargate"]
-        DocDB["Amazon DocumentDB"]
-    end
+         end
+         WAF --> ALB
+         ALB --> ECS
+         A --> B
 
-    CloudWatch["CloudWatch"]
-    SNS["SNS"]
-    CodeDeploy["CodeDeploy"]
-end
+         FrontEndECR --> ECS
+         BackEndECR --> ECS
 
-GitHubInfra --> InfraPipeline
 
-GitHubApp --> AppPipeline["Application Pipeline"]
-
-InfraPipeline --> ALB
-InfraPipeline --> ECS
-InfraPipeline --> DocDB
-InfraPipeline --> CloudWatch
-InfraPipeline --> CodeDeploy
-
-AppPipeline --> ECRFrontend
-AppPipeline --> ECRBackend
-
-ECRFrontend --> CodeDeploy
-ECRBackend --> CodeDeploy
-
-CodeDeploy --> ECS
-
-ECS --> NAT
-
-ALB --> ECS
-ECS --> DocDB
-
-CloudWatch --> SNS
+         ECS --> NAT
+         ECS --> CloudWatch
+         ALB --> CloudWatch
+         CloudWatch --> SNS
+   end      
+   User --> Route53
+   Route53 --> User
+   User --> WAF
 ```
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Terraform Provisioning & Deployment Architecture
+
+```mermaid
+   flowchart TB
+      LM["Local Machine"]
+      GHInfra["GitHub Infra"]
+      GHApp["GitHub App"]
+
+      subgraph Bootstrap["1. Bootstrap Layer"]
+         direction LR
+         BT["Terraform Bootstrap"]
+         Foundation["ECR Repositories<br/>IAM Roles<br/>S3 Artifact Bucket"]
+         InfraCI["Infrastructure CodePipeline"]
+         InfraBuild["Infrastructure CodeBuild"]
+
+         BT --> Foundation
+         BT --> InfraCI
+         BT --> InfraBuild
+      end
+
+      subgraph Infrastructure["2. Infrastructure Layer"]
+         direction TB
+         InfraTF["Terraform Plan / Apply"]
+
+         subgraph Resources["AWS Infrastructure"]
+               direction LR
+               Network["Networking<br/>VPC, Subnets<br/>NAT Gateway, Security Groups"]
+               Compute["Compute & Database<br/>ALB, ECS Cluster<br/>ECS Services, DocumentDB"]
+               Security["Security & DNS<br/>WAF, Route 53"]
+               Monitor["Monitoring<br/>CloudWatch, SNS"]
+               Delivery["Deployment<br/>CodeDeploy<br/>Application Pipeline"]
+         end
+
+         InfraTF --> Network
+         InfraTF --> Compute
+         InfraTF --> Security
+         InfraTF --> Monitor
+         InfraTF --> Delivery
+      end
+
+      subgraph Application["3. Application Layer"]
+         direction TB
+         AppCI["Application CodePipeline"]
+         Build["Build Frontend & Backend Containers"]
+         ECR["Push Images to ECR"]
+         Task["Register ECS Task Definition Revisions"]
+         Deploy["CodeDeploy Blue/Green Deployment"]
+         Running["Updated ECS Services"]
+
+         AppCI --> Build
+         Build --> ECR
+         ECR --> Task
+         Task --> Deploy
+         Deploy --> Running
+      end
+
+      LM --> BT
+      LM -.-> InfraCI
+      GHInfra --> InfraCI
+      GHApp --> AppCI
+      InfraCI --> InfraBuild
+      InfraBuild --> InfraTF
+
+      Delivery --> AppCI
+      Foundation -.-> ECR
+      Compute -.-> Running
+
+      classDef bootstrap fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
+      classDef infra fill:#fff3e0,stroke:#ef6c00,color:#9a3412
+      classDef app fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+
+      class BT,Foundation,InfraCI,InfraBuild bootstrap
+      class InfraTF,Network,Compute,Security,Monitor,Delivery infra
+      class AppCI,Build,ECR,Task,Deploy,Running app
+```
+
 This project consists of: 
 
 ### Boostrap Layer
 Provisions foundational resources:
 - ECR Repositories
 - IAM Roles
-- Artifact S3 Bucket
+- Artifacts S3 Bucket
 - Infrastructure Pipeline
+- Codebuild Infra
 
 ### Infrastructure Layer
 Provisioned through the Infrastructure Pipeline:
@@ -221,7 +289,7 @@ Provisioned through the Infrastructure Pipeline:
 - ECS Cluster
 - ECS Service
 - DocumentDB
-- Route53
+- Route53 record entries
 - WAF
 - CloudWatch
 - SNS
