@@ -1,4 +1,5 @@
-# 🚀 Enterprise CI/CD Platform on AWS
+# 🚀 Enterprise AWS Container Platform with Automated CI/CD
+
 ### Terraform | ECS Fargate | Blue/Green Deployments
 
 ## 📑 Table of Contents
